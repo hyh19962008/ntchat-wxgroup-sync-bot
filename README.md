@@ -8,7 +8,7 @@
 - python 3.6+
 - [微信PC客户端 3.6.0.18](https://github.com/tom-snow/wechat-windows-versions/releases/download/v3.6.0.18/WeChatSetup-3.6.0.18.exe)
 ## 安装依赖
-`pip install ntchat`
+`pip install ntchat`  
 `pip install python-magic python-magic-bin`
 ## 运行
 1. 正常登录PC微信（不要使用脚本登录，容易被封）
@@ -16,7 +16,7 @@
 `python main.py`  
 3. 第一次运行会打印出所有的微信群名及其对应的wxid，然后退出
 4. 将需要同步的微信群名和wxid填入sync_groups中，并注释掉"获取群列表并输出"部分代码
-5. 再次执行脚本
+5. 再次执行脚本  
 `python main.py`  
 ## 致谢
 - [ntchat](https://github.com/billyplus/ntchat)
