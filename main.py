@@ -11,6 +11,7 @@ import copy
 
 
 # 所有同步组，第一维数组的每个元素为一个同步组，一个同步组内有多个群聊
+# name是转发到其他群时显示的标题
 # member_list是wxid到用户名的dict
 # 可使用下方的“获取群列表”部分代码获取wxid
 sync_groups = [
@@ -277,16 +278,36 @@ def on_recv_file_msg(wechat_instance: ntchat.WeChat, message):
 
 
 
+# 引用消息处理动作 
+@main_handle_wrapper
+def reference_action(wechat_instance: ntchat.WeChat, data, room_name, name, room):
+    xmlContent = data["raw_msg"]
+    root = ET.XML(xmlContent)
+    appmsg = root.find("appmsg")
+    msg = appmsg.find("title")
+    
+    refermsg = appmsg.find("refermsg")
+    refname = refermsg.find("displayname")
+    refmsg = refermsg.find("content")
+    wechat_instance.send_text(to_wxid=room["room_id"], content=f"{room_name}-{name}:\n----------\n{msg.text}\n#引用\n{refname.text}: {refmsg.text}")
+
+# 注册引用消息回调
+@wechat.msg_register(ntchat.MT_RECV_OTHER_APP_MSG)
+def on_recv_reference_msg(wechat_instance: ntchat.WeChat, message):
+    if message["data"]["wx_type"] == 49 and message["data"]["wx_sub_type"] == 57:
+        reference_action(wechat_instance, message)
+
+
+
 # @wechat.msg_register(ntchat.MT_ALL)
 # def on_recv_text_msg(wechat_instance: ntchat.WeChat, message):
 #     data = message["data"]
 #     from_wxid = data["from_wxid"]
 #     room_wxid = data["room_wxid"]
-#     delay = random.randint(1, 5)
-    
-#     if room_wxid == myroom:
-#         time.sleep(delay)
-#         print(data)
+#     delay = random.randint(1, 5)    
+#     time.sleep(delay)
+#     print(data)
+
 
 # 主循环
 try:
