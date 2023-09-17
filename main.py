@@ -287,9 +287,37 @@ def reference_action(wechat_instance: ntchat.WeChat, data, room_name, name, room
     msg = appmsg.find("title")
     
     refermsg = appmsg.find("refermsg")
+    reftype = refermsg.find("type")
+    reftype = int(reftype.text)
     refname = refermsg.find("displayname")
     refmsg = refermsg.find("content")
-    wechat_instance.send_text(to_wxid=room["room_id"], content=f"{room_name}-{name}:\n----------\n{msg.text}\n#引用\n{refname.text}: {refmsg.text}")
+    
+    # 文字
+    if reftype == 1:
+        wechat_instance.send_text(to_wxid=room["room_id"], content=f"{room_name}-{name}:\n----------\n{msg.text}\n#引用\n{refname.text}: {refmsg.text}")
+    # 图片
+    elif reftype == 3:
+        wechat_instance.send_text(to_wxid=room["room_id"], content=f"{room_name}-{name}:\n----------\n{msg.text}\n#引用\n{refname.text}: 图片")
+    # 表情
+    elif reftype == 47:
+        wechat_instance.send_text(to_wxid=room["room_id"], content=f"{room_name}-{name}:\n----------\n{msg.text}\n#引用\n{refname.text}: 表情")
+    # 链接/文件
+    elif reftype == 49:
+        content = refmsg.text
+        newroot = ET.fromstring(content)
+        appmsg2 = newroot.find("appmsg")
+        link_type = int(appmsg2.find("type").text)
+        link_title = appmsg2.find("title").text
+
+        if link_type == 5:
+            wechat_instance.send_text(to_wxid=room["room_id"], content=f"{room_name}-{name}:\n----------\n{msg.text}\n#引用\n{refname.text}: 链接={link_title}")
+        elif link_type == 6:
+            wechat_instance.send_text(to_wxid=room["room_id"], content=f"{room_name}-{name}:\n----------\n{msg.text}\n#引用\n{refname.text}: 文件={link_title}")
+        else:
+            wechat_instance.send_text(to_wxid=room["room_id"], content=f"{room_name}-{name}:\n----------\n{msg.text}\n#引用\n{refname.text}: 链接=NULL")
+    # 其他
+    else:
+        wechat_instance.send_text(to_wxid=room["room_id"], content=f"{room_name}-{name}:\n----------\n{msg.text}\n#引用\n{refname.text}: 未知消息")
 
 # 注册引用消息回调
 @wechat.msg_register(ntchat.MT_RECV_OTHER_APP_MSG)
