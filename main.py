@@ -221,6 +221,7 @@ def on_recv_text_msg2(wechat_instance: ntchat.WeChat, message):
 @main_handle_wrapper
 def pic_action(wechat_instance: ntchat.WeChat, data, room_name, name, room):
     wechat_instance.send_text(to_wxid=room["room_id"], content=f"{room_name}-{name}:")
+    time.sleep(0.2)
     wechat_instance.send_image(room["room_id"], data['image'])
 
 # 注册图片消息回调
@@ -238,6 +239,7 @@ def emoji_action(wechat_instance: ntchat.WeChat, data, room_name, name, room):
     # 先将表情文件下载到本地，然后作为图片或gif发送
     file = get_emoji_file(data['raw_msg'])
     mime = magic.from_file(file, True)
+    time.sleep(0.2)
     if mime == "image/png" or mime == "image/jpeg":
         wechat_instance.send_image(room["room_id"], WorkDir + file)
     elif mime == "image/gif":
@@ -254,7 +256,7 @@ def on_recv_emoji_msg(wechat_instance: ntchat.WeChat, message):
 @main_handle_wrapper
 def link_action(wechat_instance: ntchat.WeChat, data, room_name, name, room):
     wechat_instance.send_text(to_wxid=room["room_id"], content=f"{room_name}-{name}:")
-
+    time.sleep(0.2)
     data['raw_msg'] = update_link_fromuser(data['raw_msg'])
     wechat_instance.send_xml(room["room_id"], data['raw_msg'])
 
@@ -269,6 +271,7 @@ def on_recv_link_msg(wechat_instance: ntchat.WeChat, message):
 @main_handle_wrapper
 def file_action(wechat_instance: ntchat.WeChat, data, room_name, name, room):
     wechat_instance.send_text(to_wxid=room["room_id"], content=f"{room_name}-{name}:")
+    time.sleep(0.2)
     wechat_instance.send_file(room["room_id"], data['file'])
 
 # 注册文件消息回调
