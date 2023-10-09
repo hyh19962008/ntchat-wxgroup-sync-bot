@@ -155,6 +155,9 @@ def get_group_member_name(room_id, wxid):
     # 查找miss时更新成员列表
     if j == None:
         update_member_list(room_id)
+        j = room_wxid_to_room_index_map.get(key1)
+        if j == None:
+            return "None"
 
     name = sync_groups[i][j]["member_list"][wxid]
     if not name:
