@@ -223,6 +223,19 @@ def on_recv_text_msg2(wechat_instance: ntchat.WeChat, message):
 # 图片消息处理动作
 @main_handle_wrapper
 def pic_action(wechat_instance: ntchat.WeChat, data, room_name, name, room):
+    pic1 = data['image']
+    xmlContent = data["raw_msg"]
+    root = ET.XML(xmlContent)
+    img1 = root.find("img")
+    length1 = img1.get("length") or img1.get("hdlength")    # 两个标签之一有可能为空
+    pic1_size = int(length1)
+
+    # 等待图片完整下载到本地
+    while not os.path.exists(pic1):
+        time.sleep(0.5)
+    while os.path.getsize(pic1) < pic1_size:
+        time.sleep(0.5)
+
     wechat_instance.send_text(to_wxid=room["room_id"], content=f"{room_name}-{name}:")
     time.sleep(0.2)
     wechat_instance.send_image(room["room_id"], data['image'])
