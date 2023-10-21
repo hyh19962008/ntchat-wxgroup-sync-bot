@@ -47,7 +47,11 @@ info = wechat.get_self_info()
 my_wxid = info["wxid"]
 
 if not os.path.exists(WorkDir + "/emoji"):
-    os.makedirs(WorkDir + "/emoji")
+    try:
+        os.makedirs(WorkDir + "/emoji")
+    except:
+        print("无法在工作目录" + WorkDir + "建立文件夹， 请检查是否拥有写入权限，或者修改工作目录路径")
+        exit(-1)
 
 # 获取群列表并输出
 rooms = wechat.get_rooms()
@@ -57,6 +61,14 @@ time.sleep(3)
 ntchat.exit_()
 sys.exit()
 
+# picture sending control
+class LastSender():
+    def __init__(self):
+        self.wxid = ""
+        self.time = 0.0
+        self.msg_type = 0
+
+last_sender = LastSender()
 
 # 建立 wxid/room_id 到sync_group数组下标的映射
 for i in range(len(sync_groups)):
@@ -210,6 +222,7 @@ def main_handle_wrapper(action):
 # 文本消息处理动作
 @main_handle_wrapper
 def text_action(wechat_instance: ntchat.WeChat, data, room_name, name, room):
+    last_sender.msg_type = ntchat.MT_RECV_TEXT_MSG
     print("send to : " + room["name"] + room["room_id"])
     wechat_instance.send_text(to_wxid=room["room_id"], content=f"{room_name}-{name}:\n----------\n{data['msg']}")
 
@@ -236,7 +249,13 @@ def pic_action(wechat_instance: ntchat.WeChat, data, room_name, name, room):
     while os.path.getsize(pic1) < pic1_size:
         time.sleep(0.5)
 
-    wechat_instance.send_text(to_wxid=room["room_id"], content=f"{room_name}-{name}:")
+    # 如果在30秒内连续发送图片，则不再附加发送者信息的标题
+    cur_time = time.time()
+    if last_sender.wxid != data["from_wxid"] or (cur_time - last_sender.time > 30) or last_sender.msg_type != ntchat.MT_RECV_IMAGE_MSG:
+        wechat_instance.send_text(to_wxid=room["room_id"], content=f"{room_name}-{name}:")
+    last_sender.wxid = data["from_wxid"]
+    last_sender.time = cur_time
+    last_sender.msg_type = ntchat.MT_RECV_IMAGE_MSG
     time.sleep(0.2)
     wechat_instance.send_image(room["room_id"], data['image'])
 
@@ -250,11 +269,12 @@ def on_recv_image_msg(wechat_instance: ntchat.WeChat, message):
 # 表情消息处理动作
 @main_handle_wrapper
 def emoji_action(wechat_instance: ntchat.WeChat, data, room_name, name, room):
-    wechat_instance.send_text(to_wxid=room["room_id"], content=f"{room_name}-{name}:")
+    last_sender.msg_type = ntchat.MT_RECV_EMOJI_MSG
 
     # 先将表情文件下载到本地，然后作为图片或gif发送
     file = get_emoji_file(data['raw_msg'])
     mime = magic.from_file(file, True)
+    wechat_instance.send_text(to_wxid=room["room_id"], content=f"{room_name}-{name}:")
     time.sleep(0.2)
     if mime == "image/png" or mime == "image/jpeg":
         wechat_instance.send_image(room["room_id"], WorkDir + file)
@@ -271,6 +291,7 @@ def on_recv_emoji_msg(wechat_instance: ntchat.WeChat, message):
 # 链接消息处理动作
 @main_handle_wrapper
 def link_action(wechat_instance: ntchat.WeChat, data, room_name, name, room):
+    last_sender.msg_type = ntchat.MT_RECV_LINK_MSG
     wechat_instance.send_text(to_wxid=room["room_id"], content=f"{room_name}-{name}:")
     time.sleep(0.2)
     data['raw_msg'] = update_link_fromuser(data['raw_msg'])
@@ -286,6 +307,7 @@ def on_recv_link_msg(wechat_instance: ntchat.WeChat, message):
 # 文件消息处理动作
 @main_handle_wrapper
 def file_action(wechat_instance: ntchat.WeChat, data, room_name, name, room):
+    last_sender.msg_type = ntchat.MT_RECV_FILE_MSG
     wechat_instance.send_text(to_wxid=room["room_id"], content=f"{room_name}-{name}:")
     time.sleep(0.2)
     wechat_instance.send_file(room["room_id"], data['file'])
@@ -300,6 +322,7 @@ def on_recv_file_msg(wechat_instance: ntchat.WeChat, message):
 # 引用消息处理动作 
 @main_handle_wrapper
 def reference_action(wechat_instance: ntchat.WeChat, data, room_name, name, room):
+    last_sender.msg_type = ntchat.MT_RECV_OTHER_APP_MSG
     xmlContent = data["raw_msg"]
     root = ET.XML(xmlContent)
     appmsg = root.find("appmsg")
