@@ -355,6 +355,9 @@ def reference_action(wechat_instance: ntchat.WeChat, data, room_name, name, room
             wechat_instance.send_text(to_wxid=room["room_id"], content=f"{room_name}-{name}:\n----------\n{msg.text}\n#引用\n{refname.text}: 链接={link_title}")
         elif link_type == 6:
             wechat_instance.send_text(to_wxid=room["room_id"], content=f"{room_name}-{name}:\n----------\n{msg.text}\n#引用\n{refname.text}: 文件={link_title}")
+        # 对另一个文字的引用
+        elif link_type == 57:
+            wechat_instance.send_text(to_wxid=room["room_id"], content=f"{room_name}-{name}:\n----------\n{msg.text}\n#引用\n{refname.text}: {link_title}")
         else:
             wechat_instance.send_text(to_wxid=room["room_id"], content=f"{room_name}-{name}:\n----------\n{msg.text}\n#引用\n{refname.text}: 链接=NULL")
     # 其他
