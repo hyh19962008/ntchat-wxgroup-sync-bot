@@ -223,8 +223,15 @@ def main_handle_wrapper(action):
 @main_handle_wrapper
 def text_action(wechat_instance: ntchat.WeChat, data, room_name, name, room):
     last_sender.msg_type = ntchat.MT_RECV_TEXT_MSG
-    print("send to : " + room["name"] + room["room_id"])
-    wechat_instance.send_text(to_wxid=room["room_id"], content=f"{room_name}-{name}:\n----------\n{data['msg']}")
+    normal_send = True
+    
+    for user in data['at_user_list']:
+        if user == my_wxid:
+            normal_send = False
+            wechat_instance.send_text(to_wxid=data["room_wxid"], content="你好我是机器人叮咚，我负责在不同群之间同步转发消息，实现互联互通。")
+    if normal_send:
+        print("send to : " + room["name"] + room["room_id"])
+        wechat_instance.send_text(to_wxid=room["room_id"], content=f"{room_name}-{name}:\n----------\n{data['msg']}")
 
 # 注册文本消息回调
 @wechat.msg_register(ntchat.MT_RECV_TEXT_MSG)
@@ -355,8 +362,8 @@ def reference_action(wechat_instance: ntchat.WeChat, data, room_name, name, room
             wechat_instance.send_text(to_wxid=room["room_id"], content=f"{room_name}-{name}:\n----------\n{msg.text}\n#引用\n{refname.text}: 链接={link_title}")
         elif link_type == 6:
             wechat_instance.send_text(to_wxid=room["room_id"], content=f"{room_name}-{name}:\n----------\n{msg.text}\n#引用\n{refname.text}: 文件={link_title}")
-        # 对另一个文字的引用
-        elif link_type == 57:
+        # 57=对另一个文字的引用, 53=含 #话题 的文字/接龙?
+        elif link_type == 57 or link_type == 53:
             wechat_instance.send_text(to_wxid=room["room_id"], content=f"{room_name}-{name}:\n----------\n{msg.text}\n#引用\n{refname.text}: {link_title}")
         else:
             wechat_instance.send_text(to_wxid=room["room_id"], content=f"{room_name}-{name}:\n----------\n{msg.text}\n#引用\n{refname.text}: 链接=NULL")
