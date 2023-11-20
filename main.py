@@ -276,12 +276,17 @@ def on_recv_image_msg(wechat_instance: ntchat.WeChat, message):
 # 表情消息处理动作
 @main_handle_wrapper
 def emoji_action(wechat_instance: ntchat.WeChat, data, room_name, name, room):
-    last_sender.msg_type = ntchat.MT_RECV_EMOJI_MSG
-
     # 先将表情文件下载到本地，然后作为图片或gif发送
     file = get_emoji_file(data['raw_msg'])
     mime = magic.from_file(file, True)
-    wechat_instance.send_text(to_wxid=room["room_id"], content=f"{room_name}-{name}:")
+
+    # 如果在30秒内连续发送，则不再附加发送者信息的标题
+    cur_time = time.time()
+    if last_sender.wxid != data["from_wxid"] or (cur_time - last_sender.time > 30) or last_sender.msg_type != ntchat.MT_RECV_EMOJI_MSG:
+        wechat_instance.send_text(to_wxid=room["room_id"], content=f"{room_name}-{name}:")
+    last_sender.wxid = data["from_wxid"]
+    last_sender.time = cur_time
+    last_sender.msg_type = ntchat.MT_RECV_EMOJI_MSG
     time.sleep(0.2)
     if mime == "image/png" or mime == "image/jpeg":
         wechat_instance.send_image(room["room_id"], WorkDir + file)
@@ -314,8 +319,13 @@ def on_recv_link_msg(wechat_instance: ntchat.WeChat, message):
 # 文件消息处理动作
 @main_handle_wrapper
 def file_action(wechat_instance: ntchat.WeChat, data, room_name, name, room):
+    # 如果在30秒内连续发送，则不再附加发送者信息的标题
+    cur_time = time.time()
+    if last_sender.wxid != data["from_wxid"] or (cur_time - last_sender.time > 30) or last_sender.msg_type != ntchat.MT_RECV_FILE_MSG:
+        wechat_instance.send_text(to_wxid=room["room_id"], content=f"{room_name}-{name}:")
+    last_sender.wxid = data["from_wxid"]
+    last_sender.time = cur_time
     last_sender.msg_type = ntchat.MT_RECV_FILE_MSG
-    wechat_instance.send_text(to_wxid=room["room_id"], content=f"{room_name}-{name}:")
     time.sleep(0.2)
     wechat_instance.send_file(room["room_id"], data['file'])
 
