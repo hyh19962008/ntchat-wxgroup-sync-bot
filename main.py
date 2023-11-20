@@ -381,11 +381,56 @@ def reference_action(wechat_instance: ntchat.WeChat, data, room_name, name, room
     else:
         wechat_instance.send_text(to_wxid=room["room_id"], content=f"{room_name}-{name}:\n----------\n{msg.text}\n#引用\n{refname.text}: 未知消息")
 
-# 注册引用消息回调
+# 视频号消息处理动作
+@main_handle_wrapper
+def video_finder_action(wechat_instance: ntchat.WeChat, data, room_name, name, room):
+    last_sender.msg_type = ntchat.MT_RECV_OTHER_APP_MSG
+    wechat_instance.send_text(to_wxid=room["room_id"], content=f"{room_name}-{name}:")
+    time.sleep(0.2)
+    data['raw_msg'] = update_link_fromuser(data['raw_msg'])
+    wechat_instance.send_xml(room["room_id"], data['raw_msg'])
+
+# 注册其他应用消息回调
 @wechat.msg_register(ntchat.MT_RECV_OTHER_APP_MSG)
-def on_recv_reference_msg(wechat_instance: ntchat.WeChat, message):
-    if message["data"]["wx_type"] == 49 and message["data"]["wx_sub_type"] == 57:
-        reference_action(wechat_instance, message)
+def on_recv_other_app_msg(wechat_instance: ntchat.WeChat, message):
+    if message["data"]["wx_type"] == 49:
+        # 引用消息
+        if message["data"]["wx_sub_type"] == 57:
+            reference_action(wechat_instance, message)
+        # 视频号
+        elif message["data"]["wx_sub_type"] == 51:
+            video_finder_action(wechat_instance, message)
+
+
+
+# 小程序消息处理动作
+@main_handle_wrapper
+def miniapp_action(wechat_instance: ntchat.WeChat, data, room_name, name, room):
+    last_sender.msg_type = ntchat.MT_RECV_MINIAPP_MSG
+    wechat_instance.send_text(to_wxid=room["room_id"], content=f"{room_name}-{name}:")
+    time.sleep(0.2)
+    data['raw_msg'] = update_link_fromuser(data['raw_msg'])
+    wechat_instance.send_xml(room["room_id"], data['raw_msg'])
+
+# 注册小程序消息回调
+@wechat.msg_register(ntchat.MT_RECV_MINIAPP_MSG)
+def on_recv_miniapp_msg(wechat_instance: ntchat.WeChat, message):
+    miniapp_action(wechat_instance, message)
+
+
+
+# 视频消息处理动作
+@main_handle_wrapper
+def video_action(wechat_instance: ntchat.WeChat, data, room_name, name, room):
+    last_sender.msg_type = ntchat.MT_RECV_VIDEO_MSG
+    wechat_instance.send_text(to_wxid=room["room_id"], content=f"{room_name}-{name}:")
+    time.sleep(0.2)
+    wechat_instance.send_video(room["room_id"], data['video'])
+
+# 注册视频消息回调
+@wechat.msg_register(ntchat.MT_RECV_VIDEO_MSG)
+def on_recv_video_msg(wechat_instance: ntchat.WeChat, message):
+    video_action(wechat_instance, message)
 
 
 
