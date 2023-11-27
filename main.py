@@ -348,10 +348,17 @@ def reference_action(wechat_instance: ntchat.WeChat, data, room_name, name, room
     reftype = int(reftype.text)
     refname = refermsg.find("displayname")
     refmsg = refermsg.find("content")
+    refwxid = refermsg.find("chatusr")
     
     # 文字
     if reftype == 1:
-        wechat_instance.send_text(to_wxid=room["room_id"], content=f"{room_name}-{name}:\n----------\n{msg.text}\n#引用\n{refname.text}: {refmsg.text}")
+        # 被引用消息是机器人转发的消息，不附加发送者(机器人)标题
+        if refwxid.text == my_wxid:
+            if refmsg.text.find("\n") == 0:
+                refmsg.text = refmsg.text.replace("\n", "", 1)
+            wechat_instance.send_text(to_wxid=room["room_id"], content=f"{room_name}-{name}:\n----------\n{msg.text}\n#引用\n{refmsg.text}")
+        else:
+            wechat_instance.send_text(to_wxid=room["room_id"], content=f"{room_name}-{name}:\n----------\n{msg.text}\n#引用\n{refname.text}: {refmsg.text}")
     # 图片
     elif reftype == 3:
         wechat_instance.send_text(to_wxid=room["room_id"], content=f"{room_name}-{name}:\n----------\n{msg.text}\n#引用\n{refname.text}: 图片")
