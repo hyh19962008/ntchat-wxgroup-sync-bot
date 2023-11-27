@@ -434,6 +434,23 @@ def on_recv_video_msg(wechat_instance: ntchat.WeChat, message):
 
 
 
+# 位置消息处理动作
+@main_handle_wrapper
+def location_action(wechat_instance: ntchat.WeChat, data, room_name, name, room):
+    last_sender.msg_type = ntchat.MT_RECV_LOCATION_MSG
+    root = ET.XML(data['raw_msg'])
+    location = root.find("location")
+    point1 = location.get("poiname")
+    label1 = location.get("label")
+    wechat_instance.send_text(to_wxid=room["room_id"], content=f"{room_name}-{name}:\n[位置] {point1}\n{label1}")
+
+# 注册位置消息回调
+@wechat.msg_register(ntchat.MT_RECV_LOCATION_MSG)
+def on_recv_location_msg(wechat_instance: ntchat.WeChat, message):
+    location_action(wechat_instance, message)
+
+
+
 # @wechat.msg_register(ntchat.MT_ALL)
 # def on_recv_text_msg(wechat_instance: ntchat.WeChat, message):
 #     data = message["data"]
