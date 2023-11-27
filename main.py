@@ -223,15 +223,13 @@ def main_handle_wrapper(action):
 @main_handle_wrapper
 def text_action(wechat_instance: ntchat.WeChat, data, room_name, name, room):
     last_sender.msg_type = ntchat.MT_RECV_TEXT_MSG
-    normal_send = True
     
     for user in data['at_user_list']:
-        if user == my_wxid:
-            normal_send = False
+        # @所有人时不回复提示消息
+        if user == my_wxid and data['msg'].find("@所有人") == -1:
             wechat_instance.send_text(to_wxid=data["room_wxid"], content="你好我是机器人叮咚，我负责在不同群之间同步转发消息，实现互联互通。")
-    if normal_send:
-        print("send to : " + room["name"] + room["room_id"])
-        wechat_instance.send_text(to_wxid=room["room_id"], content=f"{room_name}-{name}:\n----------\n{data['msg']}")
+    print("send to : " + room["name"] + room["room_id"])
+    wechat_instance.send_text(to_wxid=room["room_id"], content=f"{room_name}-{name}:\n----------\n{data['msg']}")
 
 # 注册文本消息回调
 @wechat.msg_register(ntchat.MT_RECV_TEXT_MSG)
