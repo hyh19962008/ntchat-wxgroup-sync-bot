@@ -225,9 +225,15 @@ def text_action(wechat_instance: ntchat.WeChat, data, room_name, name, room):
     last_sender.msg_type = ntchat.MT_RECV_TEXT_MSG
     
     for user in data['at_user_list']:
-        # @所有人时不回复提示消息
+        # 被@时回复提示消息, @所有人时不回复
         if user == my_wxid and data['msg'].find("@所有人") == -1:
-            wechat_instance.send_text(to_wxid=data["room_wxid"], content="你好我是机器人叮咚，我负责在不同群之间同步转发消息，实现互联互通。")
+            # 只发送一次(因为group内有2个以上的群时text_action触发多次)
+            try:
+                if data['_robot_prompted']:
+                    pass
+            except:
+                wechat_instance.send_text(to_wxid=data["room_wxid"], content="你好我是机器人叮咚，我负责在不同群之间同步转发消息，实现互联互通。")
+                data['_robot_prompted'] = True
     print("send to : " + room["name"] + room["room_id"])
     wechat_instance.send_text(to_wxid=room["room_id"], content=f"{room_name}-{name}:\n----------\n{data['msg']}")
 
@@ -405,6 +411,9 @@ def on_recv_other_app_msg(wechat_instance: ntchat.WeChat, message):
         # 视频号
         elif message["data"]["wx_sub_type"] == 51:
             video_finder_action(wechat_instance, message)
+        # 动画表情
+        elif message["data"]["wx_sub_type"] == 8:
+            video_finder_action(wechat_instance, message)
 
 
 
@@ -428,9 +437,25 @@ def on_recv_miniapp_msg(wechat_instance: ntchat.WeChat, message):
 @main_handle_wrapper
 def video_action(wechat_instance: ntchat.WeChat, data, room_name, name, room):
     last_sender.msg_type = ntchat.MT_RECV_VIDEO_MSG
+    
+    video1 = data['video']
+    xmlContent = data["raw_msg"]
+    root = ET.XML(xmlContent)
+    vd1 = root.find("videomsg")
+    length1 = vd1.get("length")
+    vd1_size = int(length1)
+
+    # 等待视频完整下载到本地
+    while not os.path.exists(video1):
+        print("++++++++++++++++++ video download 1")
+        time.sleep(0.5)
+    while os.path.getsize(video1) < vd1_size:
+        print("++++++++++++++++++ video download 2")
+        time.sleep(0.5)
+
     wechat_instance.send_text(to_wxid=room["room_id"], content=f"{room_name}-{name}:")
     time.sleep(0.2)
-    wechat_instance.send_video(room["room_id"], data['video'])
+    wechat_instance.send_video(room["room_id"], video1)
 
 # 注册视频消息回调
 @wechat.msg_register(ntchat.MT_RECV_VIDEO_MSG)
