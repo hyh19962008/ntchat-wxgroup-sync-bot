@@ -358,6 +358,13 @@ def reference_action(wechat_instance: ntchat.WeChat, data, room_name, name, room
     
     # 文字
     if reftype == 1:
+        # 内容太长截短
+        startp = refmsg.text.find("----------\n") 
+        startp += 1
+        if startp > 0:
+            startp += len("----------\n")
+        if len(refmsg.text[startp:]) > 37:
+            refmsg.text = refmsg.text[0:36+startp] + "..."
         # 被引用消息是机器人转发的消息，不附加发送者(机器人)标题
         if refwxid.text == my_wxid:
             if refmsg.text.find("\n") == 0:
