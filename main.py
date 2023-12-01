@@ -412,14 +412,17 @@ def video_finder_action(wechat_instance: ntchat.WeChat, data, room_name, name, r
 @wechat.msg_register(ntchat.MT_RECV_OTHER_APP_MSG)
 def on_recv_other_app_msg(wechat_instance: ntchat.WeChat, message):
     if message["data"]["wx_type"] == 49:
+        # QQ音乐
+        if message["data"]["wx_sub_type"] == 3:
+            video_finder_action(wechat_instance, message)
+        # 动画表情
+        if message["data"]["wx_sub_type"] == 8:
+            video_finder_action(wechat_instance, message)
         # 引用消息
-        if message["data"]["wx_sub_type"] == 57:
+        elif message["data"]["wx_sub_type"] == 57:
             reference_action(wechat_instance, message)
         # 视频号
         elif message["data"]["wx_sub_type"] == 51:
-            video_finder_action(wechat_instance, message)
-        # 动画表情
-        elif message["data"]["wx_sub_type"] == 8:
             video_finder_action(wechat_instance, message)
 
 
