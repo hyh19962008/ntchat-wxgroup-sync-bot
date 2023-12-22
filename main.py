@@ -386,10 +386,18 @@ def reference_action(wechat_instance: ntchat.WeChat, data, room_name, name, room
         link_type = int(appmsg2.find("type").text)
         link_title = appmsg2.find("title").text
 
-        if link_type == 5:
+        if link_type == 3:
+            wechat_instance.send_text(to_wxid=room["room_id"], content=f"{room_name}-{name}:\n----------\n{msg.text}\n#引用\n{refname.text}: %QQ音乐%")
+        elif link_type == 5:
             wechat_instance.send_text(to_wxid=room["room_id"], content=f"{room_name}-{name}:\n----------\n{msg.text}\n#引用\n{refname.text}: 链接={link_title}")
         elif link_type == 6:
             wechat_instance.send_text(to_wxid=room["room_id"], content=f"{room_name}-{name}:\n----------\n{msg.text}\n#引用\n{refname.text}: 文件={link_title}")
+        elif link_type == 8:
+            wechat_instance.send_text(to_wxid=room["room_id"], content=f"{room_name}-{name}:\n----------\n{msg.text}\n#引用\n{refname.text}: %动画表情%")
+        elif link_type == 19:
+            wechat_instance.send_text(to_wxid=room["room_id"], content=f"{room_name}-{name}:\n----------\n{msg.text}\n#引用\n{refname.text}: %聊天记录%")
+        elif link_type == 51:
+            wechat_instance.send_text(to_wxid=room["room_id"], content=f"{room_name}-{name}:\n----------\n{msg.text}\n#引用\n{refname.text}: %视频号%")
         # 57=对另一个文字的引用, 53=含 #话题 的文字/接龙?
         elif link_type == 57 or link_type == 53:
             wechat_instance.send_text(to_wxid=room["room_id"], content=f"{room_name}-{name}:\n----------\n{msg.text}\n#引用\n{refname.text}: {link_title}")
@@ -417,6 +425,9 @@ def on_recv_other_app_msg(wechat_instance: ntchat.WeChat, message):
             video_finder_action(wechat_instance, message)
         # 动画表情
         if message["data"]["wx_sub_type"] == 8:
+            video_finder_action(wechat_instance, message)
+        # 批量聊天记录
+        if message["data"]["wx_sub_type"] == 19:
             video_finder_action(wechat_instance, message)
         # 引用消息
         elif message["data"]["wx_sub_type"] == 57:
