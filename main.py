@@ -400,7 +400,7 @@ def reference_action(wechat_instance: ntchat.WeChat, data, room_name, name, room
             wechat_instance.send_text(to_wxid=room["room_id"], content=f"{room_name}-{name}:\n----------\n{msg.text}\n#引用\n{refname.text}: 文件={link_title}")
         elif link_type == 8:
             wechat_instance.send_text(to_wxid=room["room_id"], content=f"{room_name}-{name}:\n----------\n{msg.text}\n#引用\n{refname.text}: %动画表情%")
-        elif link_type == 19:
+        elif link_type == 19 or link_type == 40:
             wechat_instance.send_text(to_wxid=room["room_id"], content=f"{room_name}-{name}:\n----------\n{msg.text}\n#引用\n{refname.text}: %聊天记录%")
         elif link_type == 51:
             wechat_instance.send_text(to_wxid=room["room_id"], content=f"{room_name}-{name}:\n----------\n{msg.text}\n#引用\n{refname.text}: %视频号%")
@@ -430,10 +430,13 @@ def on_recv_other_app_msg(wechat_instance: ntchat.WeChat, message):
         if message["data"]["wx_sub_type"] == 3:
             video_finder_action(wechat_instance, message)
         # 动画表情
-        if message["data"]["wx_sub_type"] == 8:
+        elif message["data"]["wx_sub_type"] == 8:
             video_finder_action(wechat_instance, message)
         # 批量聊天记录
-        if message["data"]["wx_sub_type"] == 19:
+        elif message["data"]["wx_sub_type"] == 19 or message["data"]["wx_sub_type"] == 40:
+            video_finder_action(wechat_instance, message)
+        # 其他APP小程序(知乎)
+        elif message["data"]["wx_sub_type"] == 36:
             video_finder_action(wechat_instance, message)
         # 引用消息
         elif message["data"]["wx_sub_type"] == 57:
