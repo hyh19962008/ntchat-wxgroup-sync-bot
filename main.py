@@ -226,7 +226,8 @@ def text_action(wechat_instance: ntchat.WeChat, data, room_name, name, room):
     
     for user in data['at_user_list']:
         # 被@时回复提示消息, @所有人时不回复
-        if user == my_wxid and data['msg'].find("@所有人") == -1:
+        if user == my_wxid and (data['msg'].find("@所有人") == -1 
+                                and data['msg'].find("@All") == -1 and data['msg'].find("@all") == -1):
             # 只发送一次(因为group内有2个以上的群时text_action触发多次)
             try:
                 if data['_robot_prompted']:
@@ -492,6 +493,34 @@ def location_action(wechat_instance: ntchat.WeChat, data, room_name, name, room)
 @wechat.msg_register(ntchat.MT_RECV_LOCATION_MSG)
 def on_recv_location_msg(wechat_instance: ntchat.WeChat, message):
     location_action(wechat_instance, message)
+
+
+
+# 注册系统消息回调
+# 因为存在from_wxid是自己的情形，不能直接用@main_handle_wrapper
+@wechat.msg_register(ntchat.MT_RECV_SYSTEM_MSG)
+def on_recv_system_msg(wechat_instance: ntchat.WeChat, message):
+    data = message["data"]
+    from_wxid = data["from_wxid"]
+    room_wxid = data["room_wxid"]
+    group = get_sync_group_list(room_wxid)
+    room_name = get_room_name(room_wxid)
+    name = get_group_member_name(room_wxid, from_wxid)
+    delay = random.randint(1, 5)
+
+    for room in group:
+        if room["room_id"] != room_wxid:
+            raw_msg = data['raw_msg']
+            if message["data"]["wx_type"] == 10000:         # 这个wx_type被各种不相干的信息混用了，action中要仔细检查
+                time.sleep(delay)
+                # 收到红包的 from_wxid 是自己，无法知道是谁发的
+                if raw_msg.find('收到红包') > -1:
+                    last_sender.msg_type = ntchat.MT_RECV_SYSTEM_MSG
+                    wechat_instance.send_text(to_wxid=room["room_id"], content=f"{room_name}:\n{raw_msg}")
+                elif raw_msg.find("拍了拍") > -1:
+                    if from_wxid != my_wxid:
+                        last_sender.msg_type = ntchat.MT_RECV_SYSTEM_MSG
+                        wechat_instance.send_text(to_wxid=room["room_id"], content=f"{room_name}:\n{raw_msg}")
 
 
 
