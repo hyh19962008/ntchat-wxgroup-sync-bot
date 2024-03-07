@@ -524,6 +524,27 @@ def on_recv_system_msg(wechat_instance: ntchat.WeChat, message):
 
 
 
+MT_ROOM_UPDATE_MEMBER_NOTIFY_MSG = 11200
+# 注册群成员名称变更消息回调
+@wechat.msg_register(MT_ROOM_UPDATE_MEMBER_NOTIFY_MSG)
+def on_recv_update_memebr_msg(wechat_instance: ntchat.WeChat, message):
+    data = message["data"]
+    room_id = data["room_wxid"]  
+    i = wxid_to_group_index_map[room_id]
+    group = sync_groups[i]
+
+    for member in data["member_list"]:
+        wxid = member["wxid"]
+        key1 = room_id + "_" + wxid
+        j = room_wxid_to_room_index_map.get(key1)
+
+        if member["display_name"]:
+            group[j]["member_list"][wxid] = member["display_name"]
+        else:
+            group[j]["member_list"][wxid] = member["nickname"]
+
+
+
 # @wechat.msg_register(ntchat.MT_ALL)
 # def on_recv_text_msg(wechat_instance: ntchat.WeChat, message):
 #     data = message["data"]

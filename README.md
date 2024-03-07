@@ -21,6 +21,12 @@
 ## 示例
 ![chat1](https://raw.githubusercontent.com/hyh19962008/ntchat-wxgroup-sync-bot/main/example/chat1.png)
 ![chat2](https://raw.githubusercontent.com/hyh19962008/ntchat-wxgroup-sync-bot/main/example/chat2.png)
+## 已知问题
+- 暂不支持同步消息撤回
+- sub_type=40 的批量转发消息没有正文（没有加载到本地）
+- 视频超过一定大小时(大概20MB)，微信不会自动下载，无法触发机器人的动作
+## 捐赠
+- 支付宝: hyh19962008@gmail.com
 ## 致谢
 - [ntchat](https://github.com/billyplus/ntchat)
 - [wechat-windows-versions](https://github.com/tom-snow/wechat-windows-versions) 保存微信历史版本 
