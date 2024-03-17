@@ -517,6 +517,10 @@ def on_recv_system_msg(wechat_instance: ntchat.WeChat, message):
                 if raw_msg.find('收到红包') > -1:
                     last_sender.msg_type = ntchat.MT_RECV_SYSTEM_MSG
                     wechat_instance.send_text(to_wxid=room["room_id"], content=f"{room_name}:\n{raw_msg}")
+                # from_wxid 是自己
+                elif raw_msg.find('加入了群聊') > -1:
+                    last_sender.msg_type = ntchat.MT_RECV_SYSTEM_MSG
+                    wechat_instance.send_text(to_wxid=room["room_id"], content=f"{room_name}:\n{raw_msg}")
                 elif raw_msg.find("拍了拍") > -1:
                     if from_wxid != my_wxid:
                         last_sender.msg_type = ntchat.MT_RECV_SYSTEM_MSG
