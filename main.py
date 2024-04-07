@@ -8,13 +8,18 @@ from xml.etree import ElementTree as ET
 import urllib.request
 import magic    # pip3 install python-magic python-magic-bin
 import copy
+import json
 
+# 工作目录
+WorkDir = os.getcwd()
 
+'''
 # 所有同步组，第一维数组的每个元素为一个同步组，一个同步组内有多个群聊
 # name是转发到其他群时显示的标题
-# member_list是wxid到用户名的dict
-# 可使用下方的“获取群列表”部分代码获取wxid
-sync_groups = [
+# member_list是wxid到用户名的dict, 用户无需修改
+# 启动时命令行添加 -l 选项来获取wxid
+# 示例：
+[
     [
         {"name": "工作1群", "room_id": "01234567@chatroom", "member_list" : {}}, 
         {"name": "工作2群", "room_id": "012345678@chatroom", "member_list" : {}}
@@ -24,13 +29,13 @@ sync_groups = [
         {"name": "同学2群", "room_id": "1234567890@chatroom", "member_list" : {}}
     ]
 ]
+'''
+with open(WorkDir + "/groups.json", encoding = "utf-8") as file:
+	sync_groups = json.load(file)
 
 wxid_to_group_index_map = {}
 room_wxid_to_room_index_map = {}
 my_wxid = ''
-
-# 用户自定义 工作目录
-WorkDir = "D:/wechat_bot/"
 
 #################################################
 
@@ -54,12 +59,14 @@ if not os.path.exists(WorkDir + "/emoji"):
         exit(-1)
 
 # 获取群列表并输出
-rooms = wechat.get_rooms()
-for r in rooms:
-    print(f'群聊名: {r["nickname"]}, wxid: {r["wxid"]}, 成员数: {r["total_member"]}')
-time.sleep(3)
-ntchat.exit_()
-sys.exit()
+if len(sys.argv) > 1 and sys.argv[1] == "-l":
+    rooms = wechat.get_rooms()
+    print("---------------------------------------------------")
+    for r in rooms:
+        print(f'群聊名: {r["nickname"]}, wxid: {r["wxid"]}, 成员数: {r["total_member"]}')
+    time.sleep(3)
+    ntchat.exit_()
+    sys.exit()
 
 # picture sending control
 class LastSender():
