@@ -1,0 +1,10 @@
+[
+    [
+        {"name": "工作1群", "room_id": "01234567@chatroom", "member_list" : {}}, 
+        {"name": "工作2群", "room_id": "012345678@chatroom", "member_list" : {}}
+    ],
+    [
+        {"name": "同学1群", "room_id": "123456789@chatroom", "member_list" : {}}, 
+        {"name": "同学2群", "room_id": "1234567890@chatroom", "member_list" : {}}
+    ]
+]
