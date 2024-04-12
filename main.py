@@ -127,7 +127,7 @@ def get_emoji_file(xmlContent):
     filename = emoji.get("md5")
 
     # 将表情下载到emoji文件夹下
-    path = "emoji/" + filename
+    path = WorkDir + "/emoji/" + filename
     if not os.path.exists(path):
         urllib.request.urlretrieve(url, path)
         exist = False
@@ -301,9 +301,9 @@ def emoji_action(wechat_instance: ntchat.WeChat, data, room_name, name, room):
     last_sender.msg_type = ntchat.MT_RECV_EMOJI_MSG
     time.sleep(0.2)
     if mime == "image/png" or mime == "image/jpeg":
-        wechat_instance.send_image(room["room_id"], WorkDir + file)
+        wechat_instance.send_image(room["room_id"], file)
     elif mime == "image/gif":
-        wechat_instance.send_gif(room["room_id"], WorkDir + file)
+        wechat_instance.send_gif(room["room_id"], file)
 
 # 注册表情消息回调
 @wechat.msg_register(ntchat.MT_RECV_EMOJI_MSG)
