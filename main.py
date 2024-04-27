@@ -402,7 +402,7 @@ def reference_action(wechat_instance: ntchat.WeChat, data, room_name, name, room
 
         if link_type == 3:
             wechat_instance.send_text(to_wxid=room["room_id"], content=f"{room_name}-{name}:\n----------\n{msg.text}\n#引用\n{refname.text}: %QQ音乐%")
-        elif link_type == 5:
+        elif link_type == 4 or link_type == 5:
             wechat_instance.send_text(to_wxid=room["room_id"], content=f"{room_name}-{name}:\n----------\n{msg.text}\n#引用\n{refname.text}: 链接={link_title}")
         elif link_type == 6:
             wechat_instance.send_text(to_wxid=room["room_id"], content=f"{room_name}-{name}:\n----------\n{msg.text}\n#引用\n{refname.text}: 文件={link_title}")
@@ -436,6 +436,9 @@ def on_recv_other_app_msg(wechat_instance: ntchat.WeChat, message):
     if message["data"]["wx_type"] == 49:
         # QQ音乐
         if message["data"]["wx_sub_type"] == 3:
+            video_finder_action(wechat_instance, message)
+        # Bilibili
+        elif message["data"]["wx_sub_type"] == 4:
             video_finder_action(wechat_instance, message)
         # 动画表情
         elif message["data"]["wx_sub_type"] == 8:
