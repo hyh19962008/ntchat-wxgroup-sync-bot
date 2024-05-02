@@ -506,6 +506,26 @@ def on_recv_location_msg(wechat_instance: ntchat.WeChat, message):
 
 
 
+# 名片消息处理动作
+@main_handle_wrapper
+def namecard_action(wechat_instance: ntchat.WeChat, data, room_name, name, room):
+    last_sender.msg_type = ntchat.MT_RECV_CARD_MSG
+    
+    # 只发送一次(因为group内有2个以上的群时text_action触发多次)
+    try:
+        if data['_robot_prompted']:
+            pass
+    except:
+        wechat_instance.send_text(to_wxid=data["room_wxid"], content="很抱歉，微信不允许在群之间转发名片，消息转发失败。")
+        data['_robot_prompted'] = True
+
+# 注册名片消息回调
+@wechat.msg_register(ntchat.MT_RECV_CARD_MSG)
+def on_recv_namecard_msg(wechat_instance: ntchat.WeChat, message):
+    namecard_action(wechat_instance, message)
+
+
+
 # 注册系统消息回调
 # 因为存在from_wxid是自己的情形，不能直接用@main_handle_wrapper
 @wechat.msg_register(ntchat.MT_RECV_SYSTEM_MSG)
