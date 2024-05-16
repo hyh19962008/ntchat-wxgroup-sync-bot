@@ -39,6 +39,8 @@ my_wxid = ''
 
 #################################################
 
+DOWNLOAD_MAX_RETRY = 15
+
 wechat = ntchat.WeChat()
 
 # 打开pc微信, smart: 是否管理已经登录的微信
@@ -261,12 +263,28 @@ def pic_action(wechat_instance: ntchat.WeChat, data, room_name, name, room):
     img1 = root.find("img")
     length1 = img1.get("length") or img1.get("hdlength")    # 两个标签之一有可能为空
     pic1_size = int(length1)
+    retry = 0
+    last_file_size = 0
 
     # 等待图片完整下载到本地
-    while not os.path.exists(pic1):
+    while not os.path.exists(pic1) and retry < DOWNLOAD_MAX_RETRY:
         time.sleep(0.5)
-    while os.path.getsize(pic1) < pic1_size:
+        retry += 1
+    if retry == DOWNLOAD_MAX_RETRY:
+        print("Download image failed: " + pic1)
+        return
+    retry = 0
+    while last_file_size < pic1_size and retry < DOWNLOAD_MAX_RETRY:
         time.sleep(0.5)
+        tmp = os.path.getsize(pic1)
+        if tmp != last_file_size:
+            last_file_size = tmp
+            retry = 0
+        else:
+            retry += 1
+    if retry == DOWNLOAD_MAX_RETRY:
+        print("Download image failed: " + pic1)
+        return
 
     # 如果在30秒内连续发送图片，则不再附加发送者信息的标题
     cur_time = time.time()
@@ -276,7 +294,7 @@ def pic_action(wechat_instance: ntchat.WeChat, data, room_name, name, room):
     last_sender.time = cur_time
     last_sender.msg_type = ntchat.MT_RECV_IMAGE_MSG
     time.sleep(0.2)
-    wechat_instance.send_image(room["room_id"], data['image'])
+    wechat_instance.send_image(room["room_id"], pic1)
 
 # 注册图片消息回调
 @wechat.msg_register(ntchat.MT_RECV_IMAGE_MSG)
@@ -478,9 +496,38 @@ def on_recv_miniapp_msg(wechat_instance: ntchat.WeChat, message):
 @main_handle_wrapper
 def video_action(wechat_instance: ntchat.WeChat, data, room_name, name, room):
     last_sender.msg_type = ntchat.MT_RECV_VIDEO_MSG
+    video1 = data['video']
+    xmlContent = data["raw_msg"]
+    root = ET.XML(xmlContent)
+    vd1 = root.find("videomsg")
+    length1 = vd1.get("length")
+    vd1_size = int(length1)
+    retry = 0
+    last_file_size = 0
+
+    # 等待视频完整下载到本地
+    while not os.path.exists(video1) and retry < DOWNLOAD_MAX_RETRY:
+        time.sleep(0.5)
+        retry += 1
+    if retry == DOWNLOAD_MAX_RETRY:
+        print("Download video failed: " + video1)
+        return
+    retry = 0
+    while last_file_size < vd1_size and retry < DOWNLOAD_MAX_RETRY:
+        time.sleep(0.5)
+        tmp = os.path.getsize(video1)
+        if tmp != last_file_size:
+            last_file_size = tmp
+            retry = 0
+        else:
+            retry += 1
+    if retry == DOWNLOAD_MAX_RETRY:
+        print("Download video failed: " + video1)
+        return
+    
     wechat_instance.send_text(to_wxid=room["room_id"], content=f"{room_name}-{name}:")
     time.sleep(0.2)
-    wechat_instance.send_video(room["room_id"], data['video'])
+    wechat_instance.send_video(room["room_id"], video1)
 
 # 注册视频消息回调
 @wechat.msg_register(ntchat.MT_RECV_VIDEO_MSG)
