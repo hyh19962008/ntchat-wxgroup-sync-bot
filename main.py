@@ -623,6 +623,13 @@ def on_recv_update_memebr_msg(wechat_instance: ntchat.WeChat, message):
         wxid = member["wxid"]
         key1 = room_id + "_" + wxid
         j = room_wxid_to_room_index_map.get(key1)
+        # 查找miss时更新成员列表
+        if j == None:
+            name = get_group_member_name(room_id, wxid)
+            if name != "None":
+                j = room_wxid_to_room_index_map.get(key1)
+            else:
+                return
 
         if member["display_name"]:
             group[j]["member_list"][wxid] = member["display_name"]
