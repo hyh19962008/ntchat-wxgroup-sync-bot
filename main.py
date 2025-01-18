@@ -9,6 +9,7 @@ import urllib.request
 import magic    # pip3 install python-magic python-magic-bin
 import copy
 import json
+import threading
 
 # 工作目录
 WorkDir = os.getcwd()
@@ -39,6 +40,7 @@ my_wxid = ''
 
 #################################################
 
+DOWNLOAD_TIMEOUT = 300
 DOWNLOAD_MAX_RETRY = 15
 
 wechat = ntchat.WeChat()
@@ -254,9 +256,7 @@ def on_recv_text_msg2(wechat_instance: ntchat.WeChat, message):
 
 
 
-# 图片消息处理动作
-@main_handle_wrapper
-def pic_action(wechat_instance: ntchat.WeChat, data, room_name, name, room):
+def pic_threadAction(wechat_instance, data, room_name, name, room):
     pic1 = data['image']
     xmlContent = data["raw_msg"]
     root = ET.XML(xmlContent)
@@ -267,10 +267,10 @@ def pic_action(wechat_instance: ntchat.WeChat, data, room_name, name, room):
     last_file_size = 0
 
     # 等待图片完整下载到本地
-    while not os.path.exists(pic1) and retry < DOWNLOAD_MAX_RETRY:
+    while not os.path.exists(pic1) and retry < DOWNLOAD_TIMEOUT:
         time.sleep(0.5)
         retry += 1
-    if retry == DOWNLOAD_MAX_RETRY:
+    if retry == DOWNLOAD_TIMEOUT:
         print("Download image failed: " + pic1)
         return
     retry = 0
@@ -295,6 +295,12 @@ def pic_action(wechat_instance: ntchat.WeChat, data, room_name, name, room):
     last_sender.msg_type = ntchat.MT_RECV_IMAGE_MSG
     time.sleep(0.2)
     wechat_instance.send_image(room["room_id"], pic1)
+
+# 图片消息处理动作
+@main_handle_wrapper
+def pic_action(wechat_instance: ntchat.WeChat, data, room_name, name, room):
+    pic_thread = threading.Thread(target=pic_threadAction, args=(wechat_instance, data, room_name, name, room))
+    pic_thread.start()
 
 # 注册图片消息回调
 @wechat.msg_register(ntchat.MT_RECV_IMAGE_MSG)
@@ -388,7 +394,7 @@ def reference_action(wechat_instance: ntchat.WeChat, data, room_name, name, room
         startp = refmsg.text.find("\n#引用\n") 
         if startp > 0:
             refmsg.text = refmsg.text[0:startp]
-        
+
         # 内容太长截短
         startp = refmsg.text.find("----------\n") 
         startp += 1
@@ -497,9 +503,7 @@ def on_recv_miniapp_msg(wechat_instance: ntchat.WeChat, message):
 
 
 
-# 视频消息处理动作
-@main_handle_wrapper
-def video_action(wechat_instance: ntchat.WeChat, data, room_name, name, room):
+def video_threadAction(wechat_instance, data, room_name, name, room):
     last_sender.msg_type = ntchat.MT_RECV_VIDEO_MSG
     video1 = data['video']
     xmlContent = data["raw_msg"]
@@ -511,10 +515,10 @@ def video_action(wechat_instance: ntchat.WeChat, data, room_name, name, room):
     last_file_size = 0
 
     # 等待视频完整下载到本地
-    while not os.path.exists(video1) and retry < DOWNLOAD_MAX_RETRY:
+    while not os.path.exists(video1) and retry < DOWNLOAD_TIMEOUT:
         time.sleep(0.5)
         retry += 1
-    if retry == DOWNLOAD_MAX_RETRY:
+    if retry == DOWNLOAD_TIMEOUT:
         print("Download video failed: " + video1)
         return
     retry = 0
@@ -533,6 +537,12 @@ def video_action(wechat_instance: ntchat.WeChat, data, room_name, name, room):
     wechat_instance.send_text(to_wxid=room["room_id"], content=f"{room_name}-{name}:")
     time.sleep(0.2)
     wechat_instance.send_video(room["room_id"], video1)
+
+# 视频消息处理动作
+@main_handle_wrapper
+def video_action(wechat_instance: ntchat.WeChat, data, room_name, name, room):
+    thread1 = threading.Thread(target=video_threadAction, args=(wechat_instance, data, room_name, name, room))
+    thread1.start()
 
 # 注册视频消息回调
 @wechat.msg_register(ntchat.MT_RECV_VIDEO_MSG)
