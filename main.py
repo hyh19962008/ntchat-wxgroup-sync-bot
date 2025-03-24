@@ -261,8 +261,17 @@ def pic_threadAction(wechat_instance, data, room_name, name, room):
     xmlContent = data["raw_msg"]
     root = ET.XML(xmlContent)
     img1 = root.find("img")
-    length1 = img1.get("length") or img1.get("hdlength")    # 两个标签之一有可能为空
-    pic1_size = int(length1)
+    # 两个标签之一有可能为空
+    if img1.get("hdlength") != None:
+        length1 = img1.get("hdlength")
+        pic_hdsize = int(length1)
+    else:
+        pic_hdsize = -1
+    if img1.get("length") != None:
+        length1 = img1.get("length")
+        pic_size = int(length1)
+    else:
+        pic_size = -1
     retry = 0
     last_file_size = 0
 
@@ -274,7 +283,7 @@ def pic_threadAction(wechat_instance, data, room_name, name, room):
         print("Download image failed: " + pic1)
         return
     retry = 0
-    while last_file_size < pic1_size and retry < DOWNLOAD_MAX_RETRY:
+    while last_file_size != pic_size and last_file_size != pic_hdsize and retry < DOWNLOAD_MAX_RETRY:
         time.sleep(0.5)
         tmp = os.path.getsize(pic1)
         if tmp != last_file_size:
