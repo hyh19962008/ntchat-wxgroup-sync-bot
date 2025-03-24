@@ -273,6 +273,7 @@ def pic_threadAction(wechat_instance, data, room_name, name, room):
     else:
         pic_size = -1
     retry = 0
+    first_file_size = 0
     last_file_size = 0
 
     # 等待图片完整下载到本地
@@ -283,15 +284,18 @@ def pic_threadAction(wechat_instance, data, room_name, name, room):
         print("Download image failed: " + pic1)
         return
     retry = 0
+    # 2025.03.24: 最近xml里返回的length长度和实际文件大小不太对得上了，按first和last一样就算下载成功处理
     while last_file_size != pic_size and last_file_size != pic_hdsize and retry < DOWNLOAD_MAX_RETRY:
         time.sleep(0.5)
         tmp = os.path.getsize(pic1)
+        if first_file_size == 0:
+            first_file_size = tmp
         if tmp != last_file_size:
             last_file_size = tmp
             retry = 0
         else:
             retry += 1
-    if retry == DOWNLOAD_MAX_RETRY:
+    if retry == DOWNLOAD_MAX_RETRY and first_file_size != last_file_size:
         print("Download image failed: " + pic1)
         return
 
