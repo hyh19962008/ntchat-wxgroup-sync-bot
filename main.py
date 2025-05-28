@@ -488,6 +488,9 @@ def on_recv_other_app_msg(wechat_instance: ntchat.WeChat, message):
         # 其他APP小程序(知乎)
         elif message["data"]["wx_sub_type"] == 36:
             video_finder_action(wechat_instance, message)
+        # 视频号名片
+        elif message["data"]["wx_sub_type"] == 36:
+            video_finder_action(wechat_instance, message)
         # 引用消息
         elif message["data"]["wx_sub_type"] == 57:
             reference_action(wechat_instance, message)
